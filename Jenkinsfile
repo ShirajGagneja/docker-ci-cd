@@ -31,10 +31,14 @@ node{
     }
     
         stage('Test Deployment on Dev') {
-        
-        sshagent(credentials: ['awskey']) {
-            sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'curl localhost:8090'"
+        try {
+            sshagent(credentials: ['awskey']) {
+            sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'curl localhost:8091'"
         }
+              } catch (err) {
+              echo "something failed"
+            }
+        
         
     }
     
