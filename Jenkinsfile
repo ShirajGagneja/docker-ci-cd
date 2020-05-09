@@ -38,4 +38,12 @@ node{
         
     }
     
+            stage('Test Deployment - 2 on Dev') {
+        
+        sshagent(credentials: ['awskey']) {
+            sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'ping -c 10 localhost:8090'"
+        }
+        
+    }
+    
 }
