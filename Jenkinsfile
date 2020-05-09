@@ -25,7 +25,7 @@ node{
     stage('Run Docker Image on Dev') {
         
         sshagent(credentials: ['awskey']) {
-            sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'docker run -itd --network shirajnw -p 8090:80 shiraj07/shirajwebapp-php:${BUILD_VERSION}'"
+            sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'docker run -itd --network shirajnw --name web_app -p 8090:80 shiraj07/shirajwebapp-php:${BUILD_VERSION}'"
         }
         
     }
