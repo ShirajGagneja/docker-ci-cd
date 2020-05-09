@@ -8,16 +8,16 @@ node{
     
     stage('Build Docker Image'){
         
-        sh "sudo ls ; sudo docker build -t shiraj07/shirajwebapp-php:${BUILD_VERSION} ."
+        sh "docker build -t shiraj07/shirajwebapp-php:${BUILD_VERSION} ."
         
     }
     
     stage('Docker Image push to DockerHub'){
         
      withCredentials([string(credentialsId: 'DockerPwds', variable: 'DockerPwd')]) {
-       sh "sudo docker login -u shiraj0007 -p ${DockerPwd}"  
+       sh "docker login -u shiraj0007 -p ${DockerPwd}"  
      }
-        sh "sudo docker push shiraj07/shirajwebapp-php:${BUILD_VERSION}"
+        sh "docker push shiraj07/shirajwebapp-php:${BUILD_VERSION}"
     }
     
     
@@ -27,7 +27,7 @@ node{
         def dockerRun = "ls -l ; whoami ; pwd ; hostname"
         
         sshagent(credentials: ['awskey']) {
-        sh 'ssh -o StrictHostKeyChecking=no ec2-user@13.233.155.104 "sudo service docker start ; sudo docker run -itd --network shirajnw -p 8090:80 shiraj07/shirajwebapp-php:${BUILD_VERSION}"'
+        sh 'ssh -o StrictHostKeyChecking=no ec2-user@13.233.155.104 "service docker start ; docker run -itd --network shirajnw -p 8090:80 shiraj07/shirajwebapp-php:${BUILD_VERSION}"'
         }
         
     }
