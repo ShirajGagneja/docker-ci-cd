@@ -8,7 +8,7 @@ node{
     
     stage('Build Docker Image'){
         
-        sh "sudo docker build -t shiraj07/shirajwebapp-php:${BUILD_VERSION} ."
+        sh "sudo ls ; sudo docker build -t shiraj07/shirajwebapp-php:${BUILD_VERSION} ."
         
     }
     
