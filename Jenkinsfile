@@ -35,9 +35,7 @@ node{
             sshagent(credentials: ['awskey']) {
             sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'curl localhost:8091'"
         }
-              } catch (err) {
-              echo "something failed"
-            }
+              } 
         
         
     }
