@@ -27,7 +27,7 @@ node{
         def dockerRun = "ls -l ; whoami ; pwd ; hostname"
         
         sshagent(credentials: ['awskey']) {
-        sh 'ssh -o StrictHostKeyChecking=no ec2-user@13.233.155.104 "service docker start ; docker run -itd --network shirajnw -p 8090:80 shiraj07/shirajwebapp-php:${BUILD_VERSION}"'
+            sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'service docker start ; docker run -itd --network shirajnw -p 8090:80 shiraj07/shirajwebapp-php:${BUILD_VERSION}'"
         }
         
     }
