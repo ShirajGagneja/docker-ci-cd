@@ -24,10 +24,16 @@ node{
     
     stage('Run Docker Image on Dev') {
         
-        def dockerRun = "ls -l ; whoami ; pwd ; hostname"
-        
         sshagent(credentials: ['awskey']) {
             sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'service docker start ; docker run -itd --network shirajnw -p 8090:80 shiraj07/shirajwebapp-php:${BUILD_VERSION}'"
+        }
+        
+    }
+    
+        stage('Test Deployment on Dev') {
+        
+        sshagent(credentials: ['awskey']) {
+            sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'curl localhost:8090'"
         }
         
     }
