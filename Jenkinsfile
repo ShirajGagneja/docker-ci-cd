@@ -2,7 +2,7 @@ node{
     
     stage('SCM CHeckout'){
         
-        git credentialsId: 'e892e7e6-2365-4baa-8ed7-5e72eeb96f84', url: 'https://github.com/ShirajGagneja/docker-ci-cd.git'
+        git credentialsId: 'gitLogin', url: 'https://github.com/ShirajGagneja/docker-ci-cd'
         
     }
     
@@ -21,7 +21,6 @@ node{
     }
     
     
-    
     stage('Run Docker Image on Dev') {
         input "Deploy to prod?"
         sshagent(credentials: ['awskey']) {
@@ -30,25 +29,87 @@ node{
         
     }
     
-        stage('Test Deployment on Dev') {
-        try {
-            sshagent(credentials: ['awskey']) {
-            sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'curl localhost:8091'"
-        }
-            catch (err) {
-            echo "something failed"
-      }
-              } 
+    stage('Test Deployment on Dev') {
         
+        sshagent(credentials: ['awskey']) {
+            sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'curl localhost:8090'"
+        }
         
     }
     
-            stage('Test Deployment - 2 on Dev') {
+    stage('Make Step Fail') {
+        
+        sshagent(credentials: ['awskey']) {
+            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                sh "exit 1"
+            }
+        }
+        
+    }
+    
+    stage('Test Deployment - 2 on Dev') {
         
         sshagent(credentials: ['awskey']) {
             sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'docker inspect web_app'"
         }
         
     }
+	
+	stage('Parallel Tests as Steps') {
+        def steps = [:]
+        steps["Curl Test"] = {
+                sshagent(credentials: ['awskey']) {
+                sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'curl localhost:8090'"
+            }
+        }
+        steps["Make Test Fail"] = {
+                sshagent(credentials: ['awskey']) {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    sh "exit 1"
+                }
+            }
+        }
+        steps["Inspect Test"] = {
+                sshagent(credentials: ['awskey']) {
+                sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'docker inspect web_app'"
+            }
+        }
+        parallel steps
+    }
     
+	parallel (
+		'ConditionalTest': {
+			parameters {
+				string(name: 'custom_var', defaultValue: 'false')
+			}
+			stage('Parallel Stage Test1 : Curl Test') {
+					env.custom_var = true
+					sshagent(credentials: ['awskey']) {
+					sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'curl localhost:8090'"
+				}
+			}
+			stage('Parallel Stage Test2 : Inspect Test') {
+			
+				if(env.custom_var == 'false'){
+						sshagent(credentials: ['awskey']) {
+						sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'docker inspect web_app'"
+					}
+				}
+				else{
+						catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+						sh "exit 1"
+					}
+				}
+			}
+		},
+		'ShouldFailTest': {
+				stage('Parallel Stage Test3 : Test Fail') {
+				sshagent(credentials: ['awskey']) {
+				catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+						sh "exit 1"
+					}
+				}
+			}
+		}
+	)
 }
