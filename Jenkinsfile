@@ -29,20 +29,6 @@ node{
         }
         
     }
-    
-        stage('Test Deployment on Dev') {
-        try {
-            sshagent(credentials: ['awskey']) {
-            sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'curl localhost:8091'"
-        }
-            catch (err) {
-            echo "something failed"
-      }
-              } 
-        
-        
-    }
-    
             stage('Test Deployment - 2 on Dev') {
         
         sshagent(credentials: ['awskey']) {
