@@ -38,13 +38,44 @@ node{
     }
     
     stage('Make Step Fail') {
-        
+
         sshagent(credentials: ['awskey']) {
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                 sh "exit 1"
             }
         }
-        
+
+    }
+
+    stage('Test Retry !') {
+    try {
+        sshagent(credentials: ['awskey']) {
+            sh "ssh -o StrictHostKeyChecking=no ec2-user1@${DEV_SERVER} 'docker inspect web_app'"
+        }
+    } catch(error) {
+        echo "First build failed, let's retry if accepted"
+        retry(2) {
+                input "Retry the job ?"
+                sshagent(credentials: ['awskey']) {
+                    sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'docker inspect web_app'"
+                }
+            }
+        }
+    }
+
+    stage('Test Timeout !') {
+
+        try{
+            timeout(time: 100, unit: 'MILLISECONDS') {
+                sh "ssh -o StrictHostKeyChecking=no ec2-user@${DEV_SERVER} 'docker inspect web_app'"
+            }
+        }
+        catch (Exception e){
+            catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') {
+                sh "exit 1"
+            }
+        }
+
     }
     
     stage('Test Deployment - 2 on Dev') {
